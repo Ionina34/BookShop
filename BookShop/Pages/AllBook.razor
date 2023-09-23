@@ -1,0 +1,93 @@
+﻿@page "/listBook"
+@inject IShopRepository shop
+@attribute [Authorize(Roles = "Admin")]
+
+<style>
+    table {
+        width: 100%; /* Ширина таблицы */
+        border: 4px double black; /* Рамка вокруг таблицы */
+        border-collapse: collapse; /* Отображать только одинарные линии */
+    }
+
+    th {
+        text-align: left; /* Выравнивание по левому краю */
+        background: #ccc; /* Цвет фона ячеек */
+        padding: 5px; /* Поля вокруг содержимого ячеек */
+        border: 1px solid black; /* Граница вокруг ячеек */
+    }
+
+    td {
+        padding: 5px; /* Поля вокруг содержимого ячеек */
+        border: 1px solid black; /* Граница вокруг ячеек */
+    }
+</style>
+
+<a href="/addBook">Add Book</a>
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th> Author</th>
+            <th>Publisher </th>
+            <th>
+                Category
+            </th>
+            <th>
+                BookImage
+            </th>
+            <th>
+                Series
+            </th>
+            <th>
+                Price
+            </th>
+            <th>
+                Edit
+            </th>
+            <th>
+                Delete
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (books == null || books.Count == 0)
+        {
+            <tr>
+                <td>Нет даных</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var b in books)
+            {
+                <tr>
+                    <td>@b.Id</td>
+                    <td>@b.Title</td>
+                    <td>@b.Author.Name</td>
+                    <td>@b.Publisher.Name</td>
+                    <td>@b.Category.Name</td>
+                    <td>@b.BookImage</td>
+                    <td>@b.Series.Name</td>
+                    <td>@b.Price</td>
+                    <td><a href="/edit/@b.Id" id="@b.Id">Редактировать</a></td>
+                    <td><a class="btn" 
+                        @onclick=@(async () => await Delete(b.Id))>Delete</a></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Book> books = new List<Book>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        books = await shop.GetBooks();
+    }
+    public async Task Delete(int id){
+        books = await shop.Delete(id);
+    }
+}
+

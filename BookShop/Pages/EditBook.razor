@@ -1,0 +1,228 @@
+﻿@page "/edit/{BookId:int}"
+@page "/addBook"
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
+@inject NavigationManager NavigationManager
+@inject IShopRepository shop
+@attribute [Authorize(Roles = "Admin")]
+
+<PageTitle>Edit</PageTitle>
+
+<style>
+    h2 {
+        text-align: center;
+    }
+
+    textarea {
+        min-height: 100px;
+        height: auto;
+        width: 98%;
+    }
+
+    input {
+        width: 98%;
+    }
+
+    .select {
+        width: 98%;
+    }
+
+    .left {
+        width: 50%;
+    }
+
+    .right {
+        width: 50%;
+    }
+
+    .damisamu-dsakgcesan .kesagub {
+        width: 100%;
+        display: table;
+    }
+
+        .damisamu-dsakgcesan .kesagub .gsame-kigcesan {
+            display: table-row;
+        }
+
+        .damisamu-dsakgcesan .kesagub .kesagub-cell {
+            display: table-cell;
+            width: 50%;
+            padding: 10px;
+        }
+
+            .damisamu-dsakgcesan .kesagub .kesagub-cell.kesagub1 {
+                border-right: 1px solid black;
+                text-align: justify;
+            }
+
+            .damisamu-dsakgcesan .kesagub .kesagub-cell.kesagub2 {
+                text-align: justify;
+            }
+
+    .error {
+        color:red;
+    }
+</style>
+
+<h2>@Title</h2>
+<p class="error">@responce</p>
+
+<div class="damisamu-dsakgcesan">
+    <div class="kesagub">
+        <div class="gsame-kigcesan">
+            <div class="kesagub-cell kesagub1">
+                <p>
+                    Title: <br>
+                    <input type="text" @bind="@book.Title">
+                </p>
+                <p>
+                    <label for="Autrhor" class="control-label">
+                        Autrhor
+                    </label>
+                    <select for="Autrhor" class="form-control select"
+                            @bind="@book.AuthorId">
+                        @foreach (var author in authors)
+                        {
+                            <option value="@author.Id">
+                                @author.Name
+                            </option>
+                        }
+                    </select>
+                </p>
+                <p>
+                    Price: <br>
+                    <input type="text" @bind="@book.Price">
+                </p>
+                <p>
+                    Image: <br>
+                    <input type="text" @bind="@book.BookImage">
+                </p>
+                <p>
+                    <label for="Category" class="control-label">
+                        Category
+                    </label>
+                    <select for="Category" class="form-control select"
+                            @bind="@book.CategoryId">
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">
+                                @category.Name
+                            </option>
+                        }
+                    </select>
+                </p>
+                <p>
+                    <label for="Publisher" class="control-label">
+                        Publisher
+                    </label>
+                    <select for="Publisher" class="form-control select"
+                            @bind="@book.PublisherId">
+                        @foreach (var publisher in publishers)
+                        {
+                            <option value="@publisher.Id">
+                                @publisher.Name
+                            </option>
+                        }
+                    </select>
+                </p>
+                <p>
+                    <label for="Series">
+                        Series
+                    </label>
+                    <select for="Series" class="form-control select"
+                            @bind="@book.SeriesId">
+                        @foreach (var series in series)
+                        {
+                            <option value="@series.Id">
+                                @series.Name
+                            </option>
+                        }
+                    </select>
+                </p>
+                <p>
+                    Description: <br>
+                    <textarea @bind="@book.Description">@book.Description</textarea>
+                </p>
+                <button @onclick=@(async () => await SaveBook())>Отправить</button>
+            </div>
+            <div class="kesagub-cell kesagub2">
+                <p>
+                    <label for="Add">Добавить:</label>
+                    <select for="Add" class="form-control select"
+                            @bind="@select">
+                        @for (int i = 0; i < details.Length; i++)
+                        {
+                            <option value="@details[i]">
+                                @details[i]
+                            </option>
+                        }
+                    </select>
+                </p>
+                <p>
+                    <input type="text" @bind="@add">
+                </p>
+                <button @onclick=@(async () => await Add())>Отправить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int bookId { get; set; }
+    public string Title = "Добавление книги";
+
+    public Book book { get; set; } = new();
+    public List<Author> authors { get; set; } = new();
+    public List<Publisher> publishers { get; set; } = new();
+    public List<Category> categories { get; set; } = new();
+    public List<Series> series { get; set; } = new();
+
+    public string[] details = new string[] { "Aurhor", "Category", "Publisher", "Series" };
+    public string select = "";
+    public string add = "";
+    string responce = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (bookId != 0)
+        {
+            book = await shop.GetBook(bookId);
+            Title = "Редактирование книги";
+        }
+        authors = await shop.GetAuthors();
+        publishers = await shop.GetPublishers();
+        categories = await shop.GetCategories();
+        series = await shop.GetSeries();
+    }
+
+    public async Task SaveBook()
+    {
+        if (bookId != 0)
+        {
+            await shop.EditBook(book, bookId);
+            NavigationManager.NavigateTo("/listBook");
+        }
+        else{
+            responce = await shop.AddBook(book);
+            book = new Book() ;
+        }
+    }
+
+    private async Task Add()
+    {
+        string response = await shop.AddDetails(select, add);
+        if (response == "author")
+            authors = await shop.GetAuthors();
+        else if (response == "category")
+            categories = await shop.GetCategories();
+        else if (response == "publisher")
+            publishers = await shop.GetPublishers();
+        else if (response == "series")
+            series = await shop.GetSeries();
+        select = "";
+        add = "";
+    }
+
+}

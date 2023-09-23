@@ -1,0 +1,63 @@
+﻿<style>
+    #heart {
+        width: 20px;
+        background: radial-gradient(circle at 60% 65%, white 64%, transparent 65%) top left, radial-gradient(circle at 40% 65%, white 64%, transparent 65%) top right, linear-gradient(to bottom left, white 43%,transparent 43%) bottom left, linear-gradient(to bottom right,white 43%,transparent 43%) bottom right;
+        background-size: 50% 50%;
+        background-repeat: no-repeat;
+        display: inline-block;
+        margin-right:13px;
+    }
+
+        #heart::before {
+            content: "";
+            display: block;
+            padding-top: 100%;
+        }
+</style>
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">BookShop</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="card">
+                <span class="oi oi-plus" aria-hidden="true"></span> Card
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="favourite">
+                <div id="heart"></div> Favourite
+            </NavLink>
+        </div>
+        <AuthorizeView Roles="Admin">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="listBook">
+                    <span class="oi oi-plus" aria-hidden="true"></span> List Book
+                </NavLink>
+            </div>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

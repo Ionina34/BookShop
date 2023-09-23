@@ -1,0 +1,255 @@
+﻿@page "/book/{BookId:int}"
+@inject IShopRepository shop
+@inject NavigationManager Navigation
+
+<style>
+    .book {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .imgFav {
+        width: 30px;
+    }
+
+    .buy {
+        padding: 3px 15px;
+        border: none;
+        background-color: #f3c1f7;
+    }
+
+    .arrange {
+        padding: 3px 15px;
+        border: none;
+        background-color: #ec00fc
+    }
+
+    .fav {
+        padding: 3px 15px;
+        border-width: 1px;
+        border-color: #f3c1f7;
+        border-style: solid;
+        background-color: white
+    }
+
+    .img {
+        width: 200px;
+    }
+
+    td {
+        padding: 10px;
+    }
+</style>
+
+<AuthorizeView>
+    <NotAuthorized>
+        <div class="book">
+            <div>
+                <img class="img" src="@book.BookImage" />
+            </div>
+            <div calss="info">
+                <p>
+                    @book.Title
+                </p>
+                <p>
+                    @book.Author.Name
+                </p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <label>
+                                    Жанр
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    @book.Category.Name
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <labe>
+                                    Издательство
+                                </labe>
+                            </td>
+                            <td>
+                                <label>
+                                    @book.Publisher.Name
+                                </label>
+                            </td>
+                        </tr>
+                        @{
+                            if (book.SeriesId != 1)
+                            {
+                                <tr>
+                                    <td>
+                                        <label>
+                                            Серия
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <a href="/series/@book.SeriesId" id="@book.SeriesId">
+                                            @book.Series.Name
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        <tr>
+                            <td>
+                                <label style="font-weight:bold">
+                                    @book.Price
+                                </label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="description">
+            <div>
+                @book.Description
+            </div>
+        </div>
+    </NotAuthorized>
+    <Authorized>
+        <div class="book">
+            <div>
+                <img class="img" src="@book.BookImage" />
+                <p style="font-weight:bold;text-align:center">
+                    @book.Price
+                </p>
+            </div>
+            <div calss="info">
+                <p>
+                    @book.Title
+                </p>
+                <p>
+                    @book.Author.Name
+                </p>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <label>
+                                    Жанр
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    @book.Category.Name
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <labe>
+                                    Издательство
+                                </labe>
+                            </td>
+                            <td>
+                                <label>
+                                    @book.Publisher.Name
+                                </label>
+                            </td>
+                        </tr>
+                        @{
+                            if (book.SeriesId != 1)
+                            {
+                                <tr>
+                                    <td>
+                                        <labe>
+                                            Серия
+                                        </labe>
+                                    </td>
+                                    <td>
+                                         <a href="/series/@book.SeriesId" id="@book.SeriesId">
+                                            @book.Series.Name
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="btn">
+            @{
+                IsCart(context.User.Identity.Name, BookId);
+                if (isCard)
+                {
+                    <button class="arrange"
+                        @onclick="@(()=>Navigation.NavigateTo("/card"))">
+                        Оформить
+                    </button>
+                }
+                else
+                {
+                    <button class="buy" @onclick=@(async ()=>
+                    await AddToCart(BookId,context.User.Identity.Name))>
+                        Купить
+                    </button>
+                }
+            }
+            @{
+                IsFav(context.User.Identity.Name, BookId);
+                if (isFav)
+                {
+                    <button class="fav" @onclick=@(async ()=>
+                    await AddToFav(BookId,context.User.Identity.Name))>
+                        <img class="imgFav" src="css/Image/YesIsFavourite.png" />
+                    </button>
+                }
+                else
+                {
+                    <button class="fav" @onclick=@(async ()=>
+                    await AddToFav(BookId,context.User.Identity.Name))>
+                        <img class="imgFav" src="css/Image/NotFavourite.png" />
+                    </button>
+                }
+            }
+        </div>
+        <div class="description">
+            <div>
+                @book.Description
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter]
+    public int BookId { get; set; }
+    private Book book = new Book();
+    private bool isFav;
+    private bool isCard;
+
+    protected override async Task OnInitializedAsync()
+    {
+        book = await shop.GetBook(BookId);
+    }
+
+    private async Task IsFav(string name, int id)
+    {
+        isFav = await shop.FindBookInFav(name, id);
+    }
+    private async Task IsCart(string name, int id)
+    {
+        isCard = await shop.FindBookInCard(name, id);
+    }
+
+    private async Task AddToFav(int id, string name)
+    {
+        await shop.AddToFavourite(id, name);
+    }
+    private async Task AddToCart(int id, string name)
+    {
+        await shop.AddToCart(id, name);
+    }
+}
